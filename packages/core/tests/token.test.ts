@@ -112,6 +112,35 @@ describe('TokenChunker', () => {
     });
   });
 
+  describe('Large inputs', () => {
+    it('should chunk a single chunk of 200,000 characters', async () => {
+      const chunker = await TokenChunker.create({ chunkSize: 200_000 });
+      const text = 'x'.repeat(200_000);
+      const chunks = await chunker.chunk(text);
+      expect(chunks).toHaveLength(1);
+      expect(chunks[0].text).toBe(text);
+      expect(chunks[0].tokenCount).toBe(200_000);
+      expect(chunks[0].startIndex).toBe(0);
+      expect(chunks[0].endIndex).toBe(200_000);
+    });
+
+    it('should chunk long text into many small chunks in linear time', async () => {
+      const chunker = await TokenChunker.create({ chunkSize: 10 });
+      const text = 'x'.repeat(50_000);
+      const chunks = await chunker.chunk(text);
+      expect(chunks).toHaveLength(5_000);
+      expect(chunks[4_999].startIndex).toBe(49_990);
+      expect(chunks[4_999].endIndex).toBe(50_000);
+    });
+
+    it('should report UTF-16 indices for non-BMP characters', async () => {
+      const chunker = await TokenChunker.create({ chunkSize: 2 });
+      const text = '🦛a🦛b';
+      const chunks = await chunker.chunk(text);
+      expect(chunks.map(c => [c.startIndex, c.endIndex])).toEqual([[0, 3], [3, 6]]);
+    });
+  });
+
   describe('Unicode', () => {
     it('should handle emoji text correctly', async () => {
       const chunker = await TokenChunker.create({ chunkSize: 5 });
