@@ -139,6 +139,20 @@ describe('TokenChunker', () => {
       const chunks = await chunker.chunk(text);
       expect(chunks.map(c => [c.startIndex, c.endIndex])).toEqual([[0, 3], [3, 6]]);
     });
+
+    it('should keep indices defined and aligned with the text for fractional sizes', async () => {
+      const text = 'abcdefghij';
+      for (const [chunkSize, chunkOverlap] of [[2.5, 0], [3.5, 1.5], [4, 0.5]]) {
+        const chunker = await TokenChunker.create({ chunkSize, chunkOverlap });
+        const chunks = await chunker.chunk(text);
+        expect(chunks.length).toBeGreaterThan(0);
+        for (const chunk of chunks) {
+          expect(Number.isInteger(chunk.startIndex)).toBe(true);
+          expect(Number.isInteger(chunk.endIndex)).toBe(true);
+          expect(text.slice(chunk.startIndex, chunk.endIndex)).toBe(chunk.text);
+        }
+      }
+    });
   });
 
   describe('Unicode', () => {

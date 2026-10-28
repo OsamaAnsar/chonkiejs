@@ -109,8 +109,9 @@ export class TokenChunker {
     for (let i = 0; i < tokens.length; i += step) {
       const chunkTokens = tokens.slice(i, i + this.chunkSize);
       const chunkText = this.tokenizer.decode(chunkTokens);
-      const startCharIndex = i;
-      const endCharIndex = Math.min(i + this.chunkSize, allChars.length);
+      // slice() truncates fractional bounds, so do the same for the lookups
+      const startCharIndex = Math.trunc(i);
+      const endCharIndex = Math.min(Math.trunc(i + this.chunkSize), allChars.length);
       const startIndex = charOffsets[Math.min(startCharIndex, allChars.length)];
       const endIndex = charOffsets[Math.min(endCharIndex, allChars.length)];
 
